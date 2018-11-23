@@ -146,6 +146,8 @@ def genresJSON():
 @app.route('/genre/new/', methods=['GET','POST'])
 def newGenre():
     """This Page Will Create new genre."""
+    if 'username' not in session:
+        return redirect('/login')
     session_db=DBSession()
     if request.method == 'POST':
         new_Genre = Genre(name=request.form['name'])
@@ -158,6 +160,8 @@ def newGenre():
 @app.route('/genre/<int:genre_id>/edit/',methods=['GET','POST'])
 def editGenre(genre_id):
     """This Page will edite a genre."""
+    if 'username' not in session:
+        return redirect('/login')
     session_db = DBSession()
     edited_genre = session_db.query(Genre).filter_by(id=genre_id).one()
     if request.method == 'POST':
@@ -171,6 +175,8 @@ def editGenre(genre_id):
 @app.route('/genre/<int:genre_id>/delete/',methods=['GET','POST'])
 def deleteGenre(genre_id):
     """This Page will delete a genre and delete its movies."""
+    if 'username' not in session:
+        return redirect('/login')
     session_db =DBSession()
     genre = session_db.query(Genre).filter_by(id=genre_id).one()
     if request.method == 'POST':
@@ -204,6 +210,8 @@ def moviesJSON(genre_id):
 @app.route('/genre/<int:genre_id>/new/', methods=['GET','POST'])
 def newMovie(genre_id):
     """This page will add new movie to a genre."""
+    if 'username' not in session:
+        return redirect('/login')
     session_db  = DBSession()
     if request.method == 'POST':
         new_movie = Movie(name = request.form['name'], year = request.form['year'],
@@ -221,6 +229,8 @@ def showMovie(genre_id, movie_id):
 
 @app.route('/genre/<int:genre_id>/movie/<int:movie_id>/edit/',methods=['GET','POST'])
 def editMovie(genre_id, movie_id):
+    if 'username' not in session:
+        return redirect('/login')
     session_db = DBSession()
     edited_movie = session_db.query(Movie).filter_by(id= movie_id).one()
     print(edited_movie.name)
@@ -238,6 +248,8 @@ def editMovie(genre_id, movie_id):
 
 @app.route('/genre/<int:genre_id>/movie/<int:movie_id>/delete/',methods= ['GET', 'POST'])
 def deleteMovie(genre_id, movie_id):
+    if 'username' not in session:
+        return redirect('/login')
     session_db  = DBSession()
     deleted_movie = session_db.query(Movie).filter_by(id= movie_id).one()
     if request.method == 'POST':
