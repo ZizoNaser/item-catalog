@@ -34,9 +34,18 @@ def newGenre():
     else:
         return render_template('newGenre.html')
 
-@app.route('/genre/<int:genre_id>/edit/')
+@app.route('/genre/<int:genre_id>/edit/',methods=['GET','POST'])
 def editGenre(genre_id):
-    return "This Page will edite genre %s" % genre_id
+    """This Page will edite a genre."""
+    session_db = DBSession()
+    edited_genre = session_db.query(Genre).filter_by(id=genre_id).one()
+    if request.method == 'POST':
+        edited_genre.name = request.form['name']
+        session_db.add(edited_genre)
+        session_db.commit()
+        return redirect(url_for('showGenres'))
+    else:
+        return render_template('editeGenre.html',genre=edited_genre)
 
 @app.route('/genre/<int:genre_id>/delete/')
 def deleteGenre(genre_id):

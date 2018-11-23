@@ -1,0 +1,14 @@
+<html>
+    <body>
+        <form action= "{{url_for('editGenre', genre_id = genre.id)}}" method = 'POST'>
+
+            <p>Name:</p>
+            <input type = 'text' size='30' name = 'name' value = '{{genre.name}}'>
+
+            <br>
+            <input type="reset">
+            <input type='submit' value='Edit'>
+        </form>
+        <a href= '{{url_for('showGenres')}}'>Cancel</a>
+    </body>
+</html>
