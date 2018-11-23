@@ -88,7 +88,6 @@ def gconnect():
     params = {'access_token':credentials.access_token, 'alt':'json'}
     answer = requests.get(userinfo_url, params=params)
 
-    print(answer)
     data = answer.json()
 
     session['username'] = data['name']
@@ -105,6 +104,30 @@ def gconnect():
     flash("you are now logged in as %s" % session['username'])
     print "done!"
     return output
+
+@app.route('/gdisconnect')
+def gdisconnect():
+    credentials = session.get('credentials')
+    if credentials is None:
+        response = make_response(json.dumps("Current User not Connected."),401)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+    url = 'https://accounts.google.com/o/oauth2/revoke?token=%s'%credentials
+    h = httplib2.Http()
+    result = h.request(url, 'GET')[0]
+    if result['status'] == '200':
+        del session['credentials']
+        del session['gplus_id']
+        del session['username']
+        del session['email']
+        del session['picture']
+        response = make_response(json.dumps("The user's disconnected."),200)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+    else:
+        response = make_response(json.dumps("Failed to revoke token for given user"),400)
+        response.headers['Content-Type'] = 'application/json'
+        return response
 
 @app.route('/')
 @app.route('/genres/')
