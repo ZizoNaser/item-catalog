@@ -17,7 +17,10 @@ DBSession = sessionmaker(bind = engine)
 @app.route('/')
 @app.route('/genres/')
 def showGenres():
-    return "This Page will display all genres."
+    """This Page will display all genres."""
+    session_db = DBSession()
+    genres = session_db.query(Genre).all()
+    return render_template('index.html',genres=genres)
 
 @app.route('/genre/new/')
 def newGenre():

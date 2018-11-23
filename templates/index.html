@@ -1,0 +1,25 @@
+<html>
+
+<body>
+
+<h1>Genres</h1>
+
+<a href = '{{url_for('newGenre')}}'>
+        Add Genre</a>
+
+{% for genre in genres %}
+
+<div>
+
+<h1>{{genre.name}}</h1>
+
+<a href='{{url_for('editGenre',genre_id=genre.id)}}'>Edit</a><br>
+
+<a href='{{url_for('deleteGenre',genre_id=genre.id)}}'>Delete</a><br>
+</div>
+
+
+{% endfor %}
+</body>
+
+</html>
