@@ -2,7 +2,7 @@
 
 ########Create Flask App########
 from flask import Flask
-from flask import render_template, url_for, request, redirect, flash, jsonify
+from flask import render_template, url_for, request, redirect, flash, jsonify, session, make_response
 app = Flask(__name__)
 
 ########Configure Database######
@@ -15,6 +15,96 @@ Base.metadata.bind = engine
 DBSession = sessionmaker(bind = engine)
 
 ########End Configuration#######
+########Configure Oauth#########
+from oauth2client.client import flow_from_clientsecrets
+from oauth2client.client import FlowExchangeError
+
+import httplib2
+import json
+import requests
+import random, string
+
+CLIENT_ID = json.loads(
+    open('client_secrets.json', 'r').read()
+)['web']['client_id']
+
+########End Configuration#######
+
+@app.route('/login')
+def showLogin():
+    state = ''.join(random.choice(string.ascii_uppercase + string.digits)\
+    for x in xrange(32))
+    session['state'] = state
+    return render_template('login.html',STATE=session['state'])
+
+@app.route('/gconnect', methods=['POST'])
+def gconnect():
+    
+    if request.args.get('state') != session['state']:
+        response = make_response(json.dumps('Invalid state parameter'),401)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+    code = request.data
+    try:
+        oauth_flow = flow_from_clientsecrets('client_secrets.json', scope='')
+        oauth_flow.redirect_uri = 'postmessage'
+        credentials = oauth_flow.step2_exchange(code)
+    except FlowExchangeError:
+        response = make_response(json.dumps('Faild to upgrade the authorization code.'),401)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+    access_token = credentials.access_token
+    url = ('https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=%s'%access_token)
+    h = httplib2.Http()
+    result = json.loads(h.request(url, 'GET')[1])
+    # print("RESULT:",result)
+
+    if result.get('error') is not None:
+        response = make_response(json.dumps(result.get('error')),501)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+    gplus_id = credentials.id_token['sub']
+    if result['sub'] != gplus_id:
+        response = make_response(json.dumps("Token's user id dosn't match given user id."),401)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+    if result['aud'] != CLIENT_ID:
+        response = make_response(json.dumps("Token's user id dosn't match app;s id."),401)
+        print ("Token's user id dosn't match app;s id.")
+        response.headers['Content-Type'] = 'application/json'
+        return response
+    #Check if the user is logged in the system
+    stored_credentials = session.get('credentials')
+    stored_gplus_id =  session.get('gplus_id')
+    if stored_credentials is not None and gplus_id == stored_gplus_id:
+        response = make_response(json.dumps("The user's logged in aleardy."),200)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+    #Store the access Token 
+    session['credentials'] = credentials.access_token
+    session['gplus_id'] = gplus_id
+    #Get user Info
+    userinfo_url = "https://www.googleapis.com/oauth2/v3/userinfo"
+    params = {'access_token':credentials.access_token, 'alt':'json'}
+    answer = requests.get(userinfo_url, params=params)
+
+    print(answer)
+    data = answer.json()
+
+    session['username'] = data['name']
+    session['picture'] = data['picture']
+    session['email'] = data['email']
+
+    output = ''
+    output += '<h1>Welcome, '
+    output += session['username']
+    output += '!</h1>'
+    output += '<img src="'
+    output += session['picture']
+    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
+    flash("you are now logged in as %s" % session['username'])
+    print "done!"
+    return output
 
 @app.route('/')
 @app.route('/genres/')
@@ -136,5 +226,6 @@ def deleteMovie(genre_id, movie_id):
 
 
 if __name__ == '__main__':
+    app.secret_key = "G4-y1axq4QX9CywFhJk3Xt7z"
     app.debug = True
     app.run(host = '0.0.0.0', port= 5000)
