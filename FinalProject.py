@@ -1,6 +1,6 @@
 ########Create Flask App########
 from flask import Flask
-from flask import render_template, url_for
+from flask import render_template, url_for, request, redirect
 app = Flask(__name__)
 
 ########Configure Database######
@@ -11,7 +11,7 @@ from database_setup import Base, Genre, Movie
 engine = create_engine('sqlite:///movies.db')
 Base.metadata.bind = engine
 DBSession = sessionmaker(bind = engine)
-session_db  = DBSession()
+
 ########End Configuration#######
 
 @app.route('/')
@@ -35,13 +35,24 @@ def deleteGenre(genre_id):
 @app.route('/genre/<int:genre_id>/movies/')
 def showMovies(genre_id):
     """This page will display all movies inside a genre"""
+    session_db  = DBSession()
     genre = session_db.query(Genre).filter_by(id = genre_id).one()
     movies = session_db.query(Movie).filter_by(genre_id = genre_id)
     return render_template('genre.html',genre=genre, movies=movies)
 
-@app.route('/genre/<int:genre_id>/new/')
+@app.route('/genre/<int:genre_id>/new/', methods=['GET','POST'])
 def newMovie(genre_id):
-    return "this page will add new movie to the genre %s"%genre_id
+    """This page will add new movie to a genre."""
+    session_db  = DBSession()
+    if request.method == 'POST':
+        new_movie = Movie(name = request.form['name'], year = request.form['year'],
+                        description = request.form['description'] ,director=request.form['director'],genre_id=genre_id)
+        session_db.add(new_movie)
+        session_db.commit()
+        return redirect(url_for('showMovies',genre_id=genre_id))
+    else:
+
+        return  render_template('newMovie.html',genre_id=genre_id)
 
 @app.route('/genre/<int:genre_id>/movie/<int:movie_id>/')
 def showMovie(genre_id, movie_id):
