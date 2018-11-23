@@ -8,7 +8,7 @@ app = Flask(__name__)
 ########Configure Database######
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from database_setup import Base, Genre, Movie
+from database_setup import Base, Genre, Movie, User
 
 engine = create_engine('sqlite:///movies.db')
 Base.metadata.bind = engine
@@ -150,7 +150,7 @@ def newGenre():
         return redirect('/login')
     session_db=DBSession()
     if request.method == 'POST':
-        new_Genre = Genre(name=request.form['name'])
+        new_Genre = Genre(name=request.form['name'],user_id=session['user_id'])
         session_db.add(new_Genre)
         session_db.commit()
         return redirect(url_for('showGenres'))
@@ -204,7 +204,7 @@ def showMovies(genre_id):
 def moviesJSON(genre_id):
     session_db  = DBSession()
     genre = session_db.query(Genre).filter_by(id = genre_id).one()
-    movies = session_db.query(Movie).filter_by(genre_id = genre_id).all()
+    movies = session_db.query(Movie).filter_by(genre_id = genre.id).all()
     return jsonify(movies=[movie.serialize for movie in movies])
 
 @app.route('/genre/<int:genre_id>/new/', methods=['GET','POST'])
@@ -214,8 +214,14 @@ def newMovie(genre_id):
         return redirect('/login')
     session_db  = DBSession()
     if request.method == 'POST':
-        new_movie = Movie(name = request.form['name'], year = request.form['year'],
-                        description = request.form['description'] ,director=request.form['director'],genre_id=genre_id)
+        new_movie = Movie(
+                        name = request.form['name'],
+                        year = request.form['year'],
+                        description = request.form['description'],
+                        director=request.form['director'],
+                        genre_id=genre_id,
+                        user_id=session['user_id']
+                        )
         session_db.add(new_movie)
         session_db.commit()
         return redirect(url_for('showMovies',genre_id=genre_id))
@@ -259,6 +265,28 @@ def deleteMovie(genre_id, movie_id):
     else:
         return render_template('deleteMovie.html', movie =deleted_movie)
 
+def getUserID(emial):
+    try:
+        session_db = DBSession()
+        user = session_db.query(User).filter_by(emial=emial).one()
+        return user.id
+    except:
+        return None
+        
+
+def getUserInfo(user_id):
+    session_db = DBSession()
+    user = session_db.query(User).filter_by(id = user_id).one()
+    return user
+
+def createUser(session):
+    session_db = DBSession()
+    newUser = User(name=session['username'], email=session['email'],\
+                    picture=session['picture'])
+    session_db.add(newUser)
+    session_db.commit()
+    user = session_db.query(User).filter_by(email= session['email']).one()
+    return user.id
 
 if __name__ == '__main__':
     app.secret_key = "G4-y1axq4QX9CywFhJk3Xt7z"
