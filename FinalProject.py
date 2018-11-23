@@ -1,5 +1,3 @@
-###@TODO Add the Language attribute to the movie
-
 ########Create Flask App########
 from flask import Flask
 from flask import render_template, url_for, request, redirect, flash, jsonify, session, make_response
@@ -219,6 +217,7 @@ def newMovie(genre_id):
                         year = request.form['year'],
                         description = request.form['description'],
                         director=request.form['director'],
+                        language =request.form['language'],
                         genre_id=genre_id,
                         user_id=session['user_id']
                         )
@@ -244,6 +243,7 @@ def editMovie(genre_id, movie_id):
         edited_movie.name = request.form['name']
         edited_movie.year = request.form['year']
         edited_movie.description = request.form['description']
+        edited_movie = request.form['language']
         edited_movie.director = request.form['director']
         session_db.add(edited_movie)
         session_db.commit()
