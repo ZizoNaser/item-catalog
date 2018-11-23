@@ -58,9 +58,22 @@ def newMovie(genre_id):
 def showMovie(genre_id, movie_id):
     return "this page will display movie %s in the genre %s"%(movie_id,genre_id)
 
-@app.route('/genre/<int:genre_id>/movie/<int:movie_id>/edit/')
+@app.route('/genre/<int:genre_id>/movie/<int:movie_id>/edit/',methods=['GET','POST'])
 def editMovie(genre_id, movie_id):
-    return "this page will edit movie %s in genre %s" %(movie_id,genre_id)
+    session_db = DBSession()
+    edited_movie = session_db.query(Movie).filter_by(id= movie_id).one()
+    print(edited_movie.name)
+    if request.method == 'POST':
+        edited_movie.name = request.form['name']
+        edited_movie.year = request.form['year']
+        edited_movie.description = request.form['description']
+        edited_movie.director = request.form['director']
+        session_db.add(edited_movie)
+        session_db.commit()
+        return redirect(url_for('showMovies',genre_id=genre_id))
+    else:
+        return render_template('editMovie.html',genre_id=genre_id, movie = edited_movie)
+
 
 @app.route('/genre/<int:genre_id>/movie/<int:movie_id>/delete/')
 def deleteMovie(genre_id, movie_id):
