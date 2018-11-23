@@ -47,9 +47,22 @@ def editGenre(genre_id):
     else:
         return render_template('editeGenre.html',genre=edited_genre)
 
-@app.route('/genre/<int:genre_id>/delete/')
+@app.route('/genre/<int:genre_id>/delete/',methods=['GET','POST'])
 def deleteGenre(genre_id):
-    return "This Page will delete genre %s" % genre_id
+    """This Page will delete a genre and delete its movies."""
+    session_db =DBSession()
+    genre = session_db.query(Genre).filter_by(id=genre_id).one()
+    if request.method == 'POST':
+        movies = session_db.query(Movie).filter_by(genre_id=genre_id)
+        for movie in movies:
+            session_db.delete(movie)
+            session_db.commit()
+        session_db.delete(genre)
+        session_db.commit()
+        return redirect(url_for('showGenres'))
+    else:
+        return render_template('deleteGenre.html',genre=genre)
+    
 
 @app.route('/genre/<int:genre_id>/')
 @app.route('/genre/<int:genre_id>/movies/')
