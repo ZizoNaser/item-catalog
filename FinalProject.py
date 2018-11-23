@@ -1,5 +1,6 @@
 ########Create Flask App########
 from flask import Flask
+from flask import render_template, url_for
 app = Flask(__name__)
 
 ########Configure Database######
@@ -33,7 +34,10 @@ def deleteGenre(genre_id):
 @app.route('/genre/<int:genre_id>/')
 @app.route('/genre/<int:genre_id>/movies/')
 def showMovies(genre_id):
-    return "this page will display all movies in genre %s"%genre_id
+    """This page will display all movies inside a genre"""
+    genre = session_db.query(Genre).filter_by(id = genre_id).one()
+    movies = session_db.query(Movie).filter_by(genre_id = genre_id)
+    return render_template('genre.html',genre=genre, movies=movies)
 
 @app.route('/genre/<int:genre_id>/new/')
 def newMovie(genre_id):
@@ -48,7 +52,7 @@ def editMovie(genre_id, movie_id):
     return "this page will edit movie %s in genre %s" %(movie_id,genre_id)
 
 @app.route('/genre/<int:genre_id>/movie/<int:movie_id>/delete/')
-def delteMovie(genre_id, movie_id):
+def deleteMovie(genre_id, movie_id):
     return "This Page will delete movie %s from genre%s"%(movie_id,genre_id)
 
 
