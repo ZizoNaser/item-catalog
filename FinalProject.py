@@ -1,6 +1,8 @@
+###@TODO Add the Language attribute to the movie
+
 ########Create Flask App########
 from flask import Flask
-from flask import render_template, url_for, request, redirect
+from flask import render_template, url_for, request, redirect, flash, jsonify
 app = Flask(__name__)
 
 ########Configure Database######
@@ -21,6 +23,12 @@ def showGenres():
     session_db = DBSession()
     genres = session_db.query(Genre).all()
     return render_template('index.html',genres=genres)
+
+@app.route('/genres/JSON/')
+def genresJSON():
+    session_db = DBSession()
+    genres = session_db.query(Genre).all()
+    return jsonify(Genres=[genre.serialize for genre in genres])    
 
 @app.route('/genre/new/', methods=['GET','POST'])
 def newGenre():
@@ -70,8 +78,15 @@ def showMovies(genre_id):
     """This page will display all movies inside a genre"""
     session_db  = DBSession()
     genre = session_db.query(Genre).filter_by(id = genre_id).one()
-    movies = session_db.query(Movie).filter_by(genre_id = genre_id)
+    movies = session_db.query(Movie).filter_by(genre_id = genre_id).all()
     return render_template('genre.html',genre=genre, movies=movies)
+
+@app.route('/genre/<int:genre_id>/movies/JSON/')
+def moviesJSON(genre_id):
+    session_db  = DBSession()
+    genre = session_db.query(Genre).filter_by(id = genre_id).one()
+    movies = session_db.query(Movie).filter_by(genre_id = genre_id).all()
+    return jsonify(movies=[movie.serialize for movie in movies])
 
 @app.route('/genre/<int:genre_id>/new/', methods=['GET','POST'])
 def newMovie(genre_id):

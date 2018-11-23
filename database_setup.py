@@ -19,6 +19,14 @@ class Genre(Base):
     
     id = Column(Integer, primary_key = True)
 
+    @property
+    def serialize(self):
+        """Returns object data in easily serializable format"""
+        return {
+            'name'          : self.name,
+            'id'            : self.id,
+        }
+
 class Movie(Base):
     __tablename__ = 'movie'
 
@@ -32,6 +40,18 @@ class Movie(Base):
     genre_id = Column(Integer, ForeignKey('genre.id'))
 
     genre = relationship(Genre)
+
+    @property
+    def serialize(self):
+        """Returns object data in easily serializable format"""
+        return {
+            'name'          : self.name,
+            'description'   : self.description,
+            'year'          : self.year,
+            'director'      : self.director,
+            'language'      : self.language,
+            'id'            : self.id,
+        }
     
 
 ########Resume Confiugration####
