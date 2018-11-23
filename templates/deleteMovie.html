@@ -1,0 +1,18 @@
+<html>
+
+<body>
+<h1> Are you sure you want to delete {{movie.name}}? </h1>
+
+<form action="{{ url_for('deleteMovie', genre_id=movie.genre_id, movie_id=movie.id)}}" method = 'post'>
+
+<input type='submit', value = 'Delete'>
+
+
+
+
+</form>
+
+<a href = "{{ url_for('showMovies', genre_id = movie.genre_id)}}"> Cancel </a>
+</body>
+
+</html>
