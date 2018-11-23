@@ -1,5 +1,17 @@
+########Create Flask App########
 from flask import Flask
 app = Flask(__name__)
+
+########Configure Database######
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from database_setup import Base, Genre, Movie
+
+engine = create_engine('sqlite:///movies.db')
+Base.metadata.bind = engine
+DBSession = sessionmaker(bind = engine)
+session_db  = DBSession()
+########End Configuration#######
 
 @app.route('/')
 @app.route('/genres/')
