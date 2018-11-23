@@ -22,9 +22,17 @@ def showGenres():
     genres = session_db.query(Genre).all()
     return render_template('index.html',genres=genres)
 
-@app.route('/genre/new/')
+@app.route('/genre/new/', methods=['GET','POST'])
 def newGenre():
-    return "This Page Will Create new genre."
+    """This Page Will Create new genre."""
+    session_db=DBSession()
+    if request.method == 'POST':
+        new_Genre = Genre(name=request.form['name'])
+        session_db.add(new_Genre)
+        session_db.commit()
+        return redirect(url_for('showGenres'))
+    else:
+        return render_template('newGenre.html')
 
 @app.route('/genre/<int:genre_id>/edit/')
 def editGenre(genre_id):
