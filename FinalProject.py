@@ -28,14 +28,14 @@ CLIENT_ID = json.loads(
 
 ########End Configuration#######
 
-@app.route('/login')
+@app.route('/login/')
 def showLogin():
     state = ''.join(random.choice(string.ascii_uppercase + string.digits)\
     for x in xrange(32))
     session['state'] = state
     return render_template('login.html',STATE=session['state'])
 
-@app.route('/gconnect', methods=['POST'])
+@app.route('/gconnect/', methods=['POST'])
 def gconnect():
     
     if request.args.get('state') != session['state']:
@@ -79,6 +79,7 @@ def gconnect():
         response.headers['Content-Type'] = 'application/json'
         return response
     #Store the access Token 
+    session['provider'] = 'google'
     session['credentials'] = credentials.access_token
     session['gplus_id'] = gplus_id
     #Get user Info
@@ -92,6 +93,11 @@ def gconnect():
     session['picture'] = data['picture']
     session['email'] = data['email']
 
+    user_id = getUserID(session['email'])
+    if not user_id:
+        user_id = createUser(session)
+    session['user_id']= user_id
+
     output = ''
     output += '<h1>Welcome, '
     output += session['username']
@@ -103,7 +109,66 @@ def gconnect():
     print "done!"
     return output
 
-@app.route('/gdisconnect')
+@app.route('/fbconnect/', methods=['POST'])
+def fbconnect():
+    if request.args.get('state') != session['state']:
+        response = make_response(json.dumps('Invalid state parameter'),401)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+    access_token = request.data
+
+    app_id = json.loads(open('fb_client_secrets.json','r').read())['web']['app_id']
+    app_secret = json.loads(open('fb_client_secrets.json','r').read())['web']['app_secret']
+    url = 'https://graph.facebook.com/oauth/access_token?grant_type=fb_exchange_token&client_id=%s&client_secret=%s&fb_exchange_token=%s' %(app_id, app_secret ,access_token)
+    h = httplib2.Http()
+    result = h.request(url, 'GET')[1]
+
+    userinfo_url = "https://graph.facebook.com/v2.2/me"
+
+    result= json.loads(result)
+    token = result['access_token']
+    # print(token)
+    # print(access_token)
+    url = 'https://graph.facebook.com/v2.8/me?access_token=%s&fields=name,id,email,picture&redirect=0&height=200&width=200 '% token
+    h = httplib2.Http()
+    result = h.request(url, 'GET')[1]
+
+    data = json.loads(result)
+    # print(data)
+
+    session['provider'] = 'facebook'
+    session['username'] = data['name']
+    session['email'] = data['email']
+    session['facebook_id'] = data['id']
+    session['picture'] = data['picture']['data']['url']
+    # app_token ='2147172725536545|zV-1R7itxdd_LxmYnM0vEmE5eYQ'
+    # url = 'https://graph.facebook.com/v2.2/me/picture?%s&redirect=0&height=200&width=200' % app_token
+
+    # h = httplib2.Http()
+    # result = h.request(url, 'GET')[1]
+    # data = json.loads(result)
+    # print(data)
+    # session['picture'] = data['data']['url']
+
+    user_id = getUserID(session['email'])
+    print(user_id)
+    if not user_id:
+        user_id = createUser(session)
+    session['user_id']= user_id
+
+    output = ''
+    output += '<h1>Welcome, '
+    output += session['username']
+    output += '!</h1>'
+    output += '<img src="'
+    output += session['picture']
+    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
+    flash("you are now logged in as %s" % session['username'])
+    print "done!"
+    return output
+
+
+@app.route('/gdisconnect/')
 def gdisconnect():
     credentials = session.get('credentials')
     if credentials is None:
@@ -114,11 +179,6 @@ def gdisconnect():
     h = httplib2.Http()
     result = h.request(url, 'GET')[0]
     if result['status'] == '200':
-        del session['credentials']
-        del session['gplus_id']
-        del session['username']
-        del session['email']
-        del session['picture']
         response = make_response(json.dumps("The user's disconnected."),200)
         response.headers['Content-Type'] = 'application/json'
         return response
@@ -127,13 +187,45 @@ def gdisconnect():
         response.headers['Content-Type'] = 'application/json'
         return response
 
+@app.route('/fbdisconnect/')
+def fbdisconnect():
+    facebook_id = session['facebook_id']
+    url = 'https://graph.facebook.com/%s/permissions'% facebook_id
+    h = httplib2.Http()
+    h.request(url, 'DELETE')[1]
+    return "You have been logged out"
+
+@app.route('/disconnect/')
+def disconnect():
+    if 'provider' in session:
+        if session['provider'] == 'google':
+            gdisconnect()
+            del session['gplus_id']
+            del session['credentials'] 
+        if session['provider'] == 'facebook':
+            fbdisconnect()
+            del session['facebook_id']
+        del session['user_id']
+        del session['username']
+        del session['email']
+        del session['picture']
+        del session['provider']
+        flash("You've successfully logged out!!")
+        return redirect(url_for('showGenres'))
+    else:
+        flash("You're not logged in!!")
+        return redirect(url_for('showGenres'))
+
 @app.route('/')
 @app.route('/genres/')
 def showGenres():
     """This Page will display all genres."""
     session_db = DBSession()
     genres = session_db.query(Genre).all()
-    return render_template('index.html',genres=genres)
+    if 'username' not in session:
+        return render_template('publicGenres.html',genres=genres)
+    else:
+        return render_template('showGenres.html',genres=genres)
 
 @app.route('/genres/JSON/')
 def genresJSON():
@@ -162,6 +254,9 @@ def editGenre(genre_id):
         return redirect('/login')
     session_db = DBSession()
     edited_genre = session_db.query(Genre).filter_by(id=genre_id).one()
+    creator = getUserInfo(edited_genre.user_id)
+    if creator.id != session['user_id']:
+        flash("Only the creator of the genre can edite it.")
     if request.method == 'POST':
         edited_genre.name = request.form['name']
         session_db.add(edited_genre)
@@ -177,6 +272,10 @@ def deleteGenre(genre_id):
         return redirect('/login')
     session_db =DBSession()
     genre = session_db.query(Genre).filter_by(id=genre_id).one()
+    creator = getUserInfo(genre.user_id)
+    if creator.id != session['user_id']:
+        flash("Only the creator of the genre can delete it.")
+        return redirect('/')
     if request.method == 'POST':
         movies = session_db.query(Movie).filter_by(genre_id=genre_id)
         for movie in movies:
@@ -265,10 +364,11 @@ def deleteMovie(genre_id, movie_id):
     else:
         return render_template('deleteMovie.html', movie =deleted_movie)
 
-def getUserID(emial):
+def getUserID(email):
     try:
         session_db = DBSession()
-        user = session_db.query(User).filter_by(emial=emial).one()
+        print(email)
+        user = session_db.query(User).filter_by(email=email).one()
         return user.id
     except:
         return None
