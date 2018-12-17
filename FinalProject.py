@@ -39,13 +39,6 @@ def showLogin():
     session['state'] = state
     return render_template('login.html',STATE=session['state'])
 
-
-def getState():
-    state = ''.join(random.choice(string.ascii_uppercase + string.digits)\
-    for x in xrange(32))
-    session['state'] = state
-    return state
-
 @app.route('/gconnect/', methods=['POST'])
 def gconnect():
     
@@ -236,8 +229,8 @@ def showGenres():
     session_db = DBSession()
     genres = session_db.query(Genre).all()
     if 'username' not in session:
-        
-        return render_template('publicGenres.html',genres=genres,STATE=getState())
+        # flash("Welcome to Movies.")
+        return render_template('publicGenres.html',genres=genres)
     else:
         return render_template('showGenres.html',genres=genres)
 
@@ -341,8 +334,10 @@ def showMovies(genre_id):
     session_db  = DBSession()
     genre = session_db.query(Genre).filter_by(id = genre_id).one()
     movies = session_db.query(Movie).filter_by(genre_id = genre_id).all()
-    return render_template('genre.html',genre=genre, movies=movies)
-
+    if 'username'  in session:
+        return render_template('genre.html',genre=genre, movies=movies)
+    else:
+        return render_template('publicGenre.html',genre=genre, movies=movies)
 @app.route('/genre/<int:genre_id>/movies/JSON/')
 def moviesJSON(genre_id):
     session_db  = DBSession()
@@ -354,7 +349,8 @@ def moviesJSON(genre_id):
 def newMovie(genre_id):
     """This page will add new movie to a genre."""
     if 'username' not in session:
-        return redirect('/login')
+        flash("Please Log in first.")
+        return redirect('/')
     session_db  = DBSession()
     if request.method == 'POST':
         new_movie = Movie(
@@ -368,6 +364,19 @@ def newMovie(genre_id):
                         )
         session_db.add(new_movie)
         session_db.commit()
+        if len(request.files) != 0:
+            new_movie.image="Movie%d"%new_movie.id
+            session_db.add(new_movie)
+            session_db.commit()
+            file = request.files['image']
+            f = os.path.join("static/uploads/","Movie%d"%new_movie.id)
+            file.save(f)    
+        else:
+            new_movie.image="missing%d"%random.randint(1,7)
+            session_db.add(new_movie)
+            session_db.commit()
+        
+        flash("Movie \"%s\" Added!"%new_movie.name)
         return redirect(url_for('showMovies',genre_id=genre_id))
     else:
 
@@ -375,23 +384,46 @@ def newMovie(genre_id):
 
 @app.route('/genre/<int:genre_id>/movie/<int:movie_id>/')
 def showMovie(genre_id, movie_id):
-    return "this page will display movie %s in the genre %s"%(movie_id,genre_id)
+    """this page will display movie %s in the genre %s"""%(movie_id,genre_id)
+
+    session_db  = DBSession()
+    genre = session_db.query(Genre).filter_by(id = genre_id).one()
+    movie = session_db.query(Movie).filter_by(id = movie_id).one()
+
+    return render_template("movie.html",movie=movie, genre=genre)
 
 @app.route('/genre/<int:genre_id>/movie/<int:movie_id>/edit/',methods=['GET','POST'])
 def editMovie(genre_id, movie_id):
     if 'username' not in session:
-        return redirect('/login')
+        flash("Please Login first.")
+        return redirect('/')
     session_db = DBSession()
     edited_movie = session_db.query(Movie).filter_by(id= movie_id).one()
-    print(edited_movie.name)
+    creator = getUserInfo(edited_movie.user_id)
+    if creator.id != session['user_id']:
+        flash("Only the creator of the Movie can edite it.")
+        return redirect(url_for('showMovies',genre_id=genre_id))
     if request.method == 'POST':
+        old_name = edited_movie.name
+        
+        edited_movie.director = request.form['director']
         edited_movie.name = request.form['name']
         edited_movie.year = request.form['year']
         edited_movie.description = request.form['description']
-        edited_movie = request.form['language']
-        edited_movie.director = request.form['director']
+        edited_movie.language = request.form['language']
+
+        if len(request.files) != 0:
+            if edited_movie.image == "Movie%d"%edited_movie.id:
+                os.remove("static/uploads/Movie%d"%movie_id)
+            edited_movie.image = "Movie%d"%edited_movie.id
+            file = request.files['image']
+            f = os.path.join("static/uploads/","Movie%d"%edited_movie.id)
+            file.save(f)
+
         session_db.add(edited_movie)
         session_db.commit()
+
+        flash("Movie:\"%s\" edited."%old_name)
         return redirect(url_for('showMovies',genre_id=genre_id))
     else:
         return render_template('editMovie.html',genre_id=genre_id, movie = edited_movie)
@@ -403,9 +435,15 @@ def deleteMovie(genre_id, movie_id):
         return redirect('/login')
     session_db  = DBSession()
     deleted_movie = session_db.query(Movie).filter_by(id= movie_id).one()
+    creator = getUserInfo(deleted_movie.user_id)
+    if creator.id != session['user_id']:
+        flash("Only the creator of the Movie can delete it.")
+        return redirect(url_for('showMovies',genre_id=genre_id))
     if request.method == 'POST':
         session_db.delete(deleted_movie)
         session_db.commit()
+        if deleted_movie.image == "Movie%d"%deleted_movie.id:
+            os.remove("static/uploads/Movie%d"%movie_id)
         return redirect(url_for('showMovies',genre_id=genre_id))
     else:
         return render_template('deleteMovie.html', movie =deleted_movie)

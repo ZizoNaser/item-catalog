@@ -33,11 +33,11 @@
 				<!-- Nav -->
 					<nav id="nav">
 						<ul class="links">
-
-                            <li class="active"><a href= "{{url_for('showMovies',genre_id=genre.id)}}" >movies</a></li>
+                            <li class="active"><a href= "{{url_for('showMovie',genre_id=genre.id,movie_id=movie.id)}}" >movie</a></li>
+                           
+                            <li ><a href= "{{url_for('showMovies',genre_id=genre.id)}}" >movies</a></li>
                             <li><a href = "{{url_for('showGenres')}}" >Genres</a></li>
-
-							<li class="col-6"></li>
+       					<li class="col-7"></li>
 							<li><a href = "{{url_for('showLogin')}}" style="color:#1abc9c">Login</a></li>
 						</ul>
 						<ul class="icons">
@@ -54,28 +54,20 @@
 						<!-- Featured Post --> 
 							<article class="post featured">
 								<header class="major">
-                                    <span class="date">{{genre.name}}</span>
-                                    <p>{{genre.description}}</p>
+                                    <span class="date">{{movie.name}}</span>
+                                    <p>{{genre.year}}</p>
 									</header>
-								<div class="image main"><img src="{{ url_for('static', filename='uploads/%s'%genre.image) }}" alt="{{genre.name}}" style="width:100%; height:20rem;"/></div>
-							</article>
-
-						<!-- Posts -->
-							<section class="posts">
-								{% for movie in movies %}
-									<article>
-										<header>
-											
-                                                <a href="{{url_for('showMovie',genre_id=genre.id, movie_id=movie.id)}}"><h4>{{movie.name}}</h4></a>
-										</header>
-										<a href="{{url_for('showMovie',genre_id=genre.id, movie_id=movie.id)}}" class="image fit"><img src="{{ url_for('static', filename='uploads/%s'%movie.image) }}" alt="{{movie.name}}" style="width:100%; height:20rem;"/></a>
-                                        
-                                        <ul class="actions special">
-											<li><a href="{{url_for('showMovie',genre_id=genre.id, movie_id=movie.id)}}" class="button">View Movie</a></li>
-										</ul>
-									</article>
-								{% endfor %}
-
+                                <div class="image main"><a href="{{url_for('showMovie',genre_id=genre.id, movie_id=movie.id)}}"><img src="{{ url_for('static', filename='uploads/%s'%movie.image) }}" alt="{{movie.name}}" style="width:100%; height:20rem;"/></a>
+                                </div>
+                                <p>{{genre.description}}</p>
+                                <p>Director: {{genre.director}}</p>
+                                <p>Language: {{genre.language}}</p>
+                                
+                                <ul class="actions small special">
+                                        <li><a href="{{url_for('editMovie',genre_id = genre.id, movie_id = movie.id) }}" class="button primary small">Edit</a></li>
+                                        <li><a href="{{url_for('deleteMovie',genre_id = genre.id, movie_id = movie.id) }}" class="button primary small">Delete</a></li>
+                                    </ul>
+                            </article>
 								
 							</section>
 					</div>

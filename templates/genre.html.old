@@ -1,0 +1,32 @@
+<html>
+
+<body>
+
+<h1>{{genre.name}}</h1>
+<h2>{{genre.description}}</h2>
+
+<a href = '{{url_for('newMovie', genre_id = genre.id) }}'>
+        Add Movie</a>
+
+{% for movie in movies %}
+
+<div>
+
+<a href="{{url_for('showMovie',genre_id=genre.id, movie_id=movie.id)}}"><h1>{{movie.name}}</h1></a>
+
+<p>{{movie.description}}</p>
+
+<p> {{movie.year}} </p>
+
+<p> {{movie.director}} </p>
+
+<a href='{{url_for('editMovie',genre_id = genre.id, movie_id = movie.id) }}'>Edit</a><br>
+
+<a href='{{url_for('deleteMovie',genre_id = genre.id, movie_id = movie.id) }}'>Delete</a><br>
+</div>
+
+
+{% endfor %}
+</body>
+
+</html>
