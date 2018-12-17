@@ -2,12 +2,12 @@
 
 Item Catalog is a flask web applicaion that you can through it add a list of movies and deferent genres.
 
-#Set-up
+# Set-up
 * Install Vagrant
 * Clone the [fullstack-nanodegree-vm repository.](https://github.com/udacity/fullstack-nanodegree-vm)
 * Copy this project into "catalog" folder
 
-#Usage
+# Usage
 * Change directory to the fullstack-nanodegree-vm folder
 run `vagrant up`
 
