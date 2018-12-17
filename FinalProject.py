@@ -393,6 +393,14 @@ def moviesJSON(genre_id):
     return jsonify(movies=[movie.serialize for movie in movies])
 
 
+@app.route('/genre/<int:genre_id>/movie/<int:movie_id>/JSON/')
+def movieJSON(genre_id, movie_id):
+    session_db = DBSession()
+    # genre = session_db.query(Genre).filter_by(id=genre_id).one()
+    movie = session_db.query(Movie).filter_by(id=movie_id).one()
+    return jsonify(movie.serialize)
+
+
 @app.route('/genre/<int:genre_id>/new/', methods=['GET', 'POST'])
 def newMovie(genre_id):
     """This page will add new movie to a genre."""

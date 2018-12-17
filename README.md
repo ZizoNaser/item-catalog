@@ -22,3 +22,17 @@ run `vagrant up`
 
 * You can access the app from any brower using
 `http://localhost:5000/`
+
+# APIs
+
+* You can get a list of all movies genres requesting:
+
+`/genres/JSON/`
+
+* And you can get  genre's movies  requesting:
+
+`/genre/{Genre ID}/movies/JSON/`
+
+* Also you can get movie details requesting:
+
+`/genre/{Genre ID}/movie/{Movie ID}/JSON/`

@@ -59,7 +59,7 @@
 									<form method="post" action="{{url_for('editMovie', genre_id = genre_id, movie_id=movie.id)}}" enctype="multipart/form-data">
 										<div class="row gtr-uniform">
 											<div class="col-6 col-12-xsmall">
-												<input type="text" name="name"  value="{{movie.name}}" placeholder="Name" />
+												<input type="text" name="name"  value="{{movie.name}}" placeholder="Name" required/>
                                             </div>
                                             <div class="col-12">
 												<select name="year" id="year" style="color:#999">

@@ -56,10 +56,10 @@
 									<form method="post" action="{{url_for('newMovie', genre_id = genre_id )}}" enctype="multipart/form-data">
 										<div class="row gtr-uniform">
 											<div class="col-6 col-12-xsmall">
-												<input type="text" name="name"  value="" placeholder="Name" />
+												<input type="text" name="name"  value="" placeholder="Name" required/>
                                             </div>
                                             <div class="col-12">
-												<select name="year" id="year" style="color:#999">
+												<select name="year" id="year" style="color:#999" required>
                                                     <option value="" disabled selected>--year--</option>
 												</select>
 											</div>
