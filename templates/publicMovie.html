@@ -37,7 +37,7 @@
                            
                             <li ><a href= "{{url_for('showMovies',genre_id=genre.id)}}" >movies</a></li>
                             <li><a href = "{{url_for('showGenres')}}" >Genres</a></li>
-       					<li class="col-7"></li>
+       					<li class="col-6"></li>
 							<li><a href = "{{url_for('showLogin')}}" style="color:#1abc9c">Login</a></li>
 						</ul>
 						<ul class="icons">
@@ -63,10 +63,7 @@
                                 <p>Director: {{genre.director}}</p>
                                 <p>Language: {{genre.language}}</p>
                                 
-                                <ul class="actions small special">
-                                        <li><a href="{{url_for('editMovie',genre_id = genre.id, movie_id = movie.id) }}" class="button primary small">Edit</a></li>
-                                        <li><a href="{{url_for('deleteMovie',genre_id = genre.id, movie_id = movie.id) }}" class="button primary small">Delete</a></li>
-                                    </ul>
+                                
                             </article>
 								
 							</section>
