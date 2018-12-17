@@ -1,0 +1,41 @@
+<html>
+<head>
+        <link rel="stylesheet" href="./yearpicker.css">
+        
+</head>
+<body>
+<h1> New Movie </h1>
+
+<form action="{{url_for('newMovie', genre_id = genre_id )}}" method = 'POST'>
+
+<p>Name:</p>
+
+<input type='text' size='30' name='name'>
+
+<p>Year:</p>
+<input type="text" class="yearpicker" name='year' value="">
+
+
+<p>Description:</p>
+<textarea rows="4" cols="50" name="description">
+        
+        </textarea>
+
+<p>Director:</p>
+<input type='text' size='30' name='director'> 
+
+<p>Language:</p>
+<input type='text' size='30' name='language'>
+
+<input type='submit' value='Create'>
+
+
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" 
+                integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" 
+                crossorigin="anonymous"></script>
+        <script src="./yearpicker.js" async></script>
+</form>
+
+</body>
+</html>

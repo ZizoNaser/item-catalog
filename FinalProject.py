@@ -39,6 +39,13 @@ def showLogin():
     session['state'] = state
     return render_template('login.html',STATE=session['state'])
 
+
+def getState():
+    state = ''.join(random.choice(string.ascii_uppercase + string.digits)\
+    for x in xrange(32))
+    session['state'] = state
+    return state
+
 @app.route('/gconnect/', methods=['POST'])
 def gconnect():
     
@@ -229,7 +236,8 @@ def showGenres():
     session_db = DBSession()
     genres = session_db.query(Genre).all()
     if 'username' not in session:
-        return render_template('publicGenres.html',genres=genres)
+        
+        return render_template('publicGenres.html',genres=genres,STATE=getState())
     else:
         return render_template('showGenres.html',genres=genres)
 
@@ -259,7 +267,7 @@ def newGenre():
             f = os.path.join("static/uploads/","Genre%d"%new_Genre.id)
             file.save(f)
         else:
-            new_Genre = Genre(name=request.form['name'],description=request.form['description'],user_id=session['user_id'],image="missing")
+            new_Genre = Genre(name=request.form['name'],description=request.form['description'],user_id=session['user_id'],image="missing%d"%random.randint(1,7))   
             session_db.add(new_Genre)
             session_db.commit()
         return redirect(url_for('showGenres'))

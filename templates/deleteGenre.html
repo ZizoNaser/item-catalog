@@ -33,8 +33,10 @@
 				<!-- Nav -->
 					<nav id="nav">
 						<ul class="links">
-							<li class="active"><a href="{{url_for('showGenres')}}">Movies</a></li>
+							<li class="active"><a href="{{ url_for('deleteGenre', genre_id=genre.id)}}">delete Genre</a></li>
 							
+							<li><a href = "{{url_for('showGenres')}}" >Genres</a></li>
+							<li class="col-7"></li>
 							<li><a href = "{{url_for('disconnect')}}" style="color:#e74c3c">Log out!</a></li>
 						</ul>
 						<ul class="icons">
