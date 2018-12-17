@@ -3,6 +3,7 @@
 <body>
 
 <h1>{{genre.name}}</h1>
+<h2>{{genre.description}}</h2>
 
 <a href = '{{url_for('newMovie', genre_id = genre.id) }}'>
         Add Movie</a>
@@ -11,7 +12,7 @@
 
 <div>
 
-<a href="{{url_for('showMovie',genre_id=genre.id, movie_id=movie.id"><h1>{{movie.name}}</h1></a>
+<a href="{{url_for('showMovie',genre_id=genre.id, movie_id=movie.id)}}"><h1>{{movie.name}}</h1></a>
 
 <p>{{movie.description}}</p>
 
