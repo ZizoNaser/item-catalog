@@ -25,7 +25,11 @@ import random, string
 CLIENT_ID = json.loads(
     open('client_secrets.json', 'r').read()
 )['web']['client_id']
-
+########End Configuration#######
+########Configure Upload folder#
+import os
+UPLOAD_FOLDER = os.path.basename('static/uploads')
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 ########End Configuration#######
 
 @app.route('/login/')
@@ -197,6 +201,8 @@ def fbdisconnect():
 
 @app.route('/disconnect/')
 def disconnect():
+    # print "HI"
+    # print session['provider']
     if 'provider' in session:
         if session['provider'] == 'google':
             gdisconnect()
@@ -237,12 +243,25 @@ def genresJSON():
 def newGenre():
     """This Page Will Create new genre."""
     if 'username' not in session:
-        return redirect('/login')
+        flash("Please login first.")
+        return redirect('/')
     session_db=DBSession()
     if request.method == 'POST':
-        new_Genre = Genre(name=request.form['name'],user_id=session['user_id'])
-        session_db.add(new_Genre)
-        session_db.commit()
+        
+        if len(request.files) != 0:
+            new_Genre = Genre(name=request.form['name'],description=request.form['description'],user_id=session['user_id'],)
+            session_db.add(new_Genre)
+            session_db.commit()
+            new_Genre.image="Genre%d"%new_Genre.id
+            session_db.add(new_Genre)
+            session_db.commit()
+            file = request.files['image']
+            f = os.path.join("static/uploads/","Genre%d"%new_Genre.id)
+            file.save(f)
+        else:
+            new_Genre = Genre(name=request.form['name'],description=request.form['description'],user_id=session['user_id'],image="missing")
+            session_db.add(new_Genre)
+            session_db.commit()
         return redirect(url_for('showGenres'))
     else:
         return render_template('newGenre.html')
@@ -251,16 +270,28 @@ def newGenre():
 def editGenre(genre_id):
     """This Page will edite a genre."""
     if 'username' not in session:
-        return redirect('/login')
+        flash("Please login first.")
+        return redirect('/')
     session_db = DBSession()
     edited_genre = session_db.query(Genre).filter_by(id=genre_id).one()
     creator = getUserInfo(edited_genre.user_id)
     if creator.id != session['user_id']:
         flash("Only the creator of the genre can edite it.")
+        return redirect(url_for('showGenres'))
     if request.method == 'POST':
+        old_name = edited_genre.name
         edited_genre.name = request.form['name']
+        edited_genre.description=request.form['description']
+        if len(request.files) != 0:
+            if edited_genre.image == "Genre%d"%edited_genre.id:
+                os.remove("static/uploads/Genre%d"%genre_id)
+            edited_genre.image = "Genre%d"%edited_genre.id
+            file = request.files['image']
+            f = os.path.join("static/uploads/","Genre%d"%edited_genre.id)
+            file.save(f)
         session_db.add(edited_genre)
         session_db.commit()
+        flash("Genre:\"%s\" Edited!"%old_name)
         return redirect(url_for('showGenres'))
     else:
         return render_template('editeGenre.html',genre=edited_genre)
@@ -269,7 +300,8 @@ def editGenre(genre_id):
 def deleteGenre(genre_id):
     """This Page will delete a genre and delete its movies."""
     if 'username' not in session:
-        return redirect('/login')
+        flash("Please login first.")
+        return redirect('/')
     session_db =DBSession()
     genre = session_db.query(Genre).filter_by(id=genre_id).one()
     creator = getUserInfo(genre.user_id)
@@ -277,12 +309,18 @@ def deleteGenre(genre_id):
         flash("Only the creator of the genre can delete it.")
         return redirect('/')
     if request.method == 'POST':
+        name = genre.name
         movies = session_db.query(Movie).filter_by(genre_id=genre_id)
         for movie in movies:
             session_db.delete(movie)
             session_db.commit()
         session_db.delete(genre)
         session_db.commit()
+
+        if genre.image == "Genre%d"%genre_id:
+            os.remove("static/uploads/Genre%d"%genre_id)
+        
+        flash("Gnere:\"%s\" Deleted!"%name)
         return redirect(url_for('showGenres'))
     else:
         return render_template('deleteGenre.html',genre=genre)
@@ -387,6 +425,18 @@ def createUser(session):
     session_db.commit()
     user = session_db.query(User).filter_by(email= session['email']).one()
     return user.id
+
+@app.after_request
+def add_header(r):
+    """
+    Add headers to both force latest IE rendering engine or Chrome Frame,
+    and also to cache the rendered page for 10 minutes.
+    """
+    r.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    r.headers["Pragma"] = "no-cache"
+    r.headers["Expires"] = "0"
+    r.headers['Cache-Control'] = 'public, max-age=0'
+    return r
 
 if __name__ == '__main__':
     app.secret_key = "G4-y1axq4QX9CywFhJk3Xt7z"

@@ -27,7 +27,8 @@ class Genre(Base):
 
     name = Column(String(80), nullable=False)
     id = Column(Integer, primary_key=True)
-
+    description = Column(String(250))
+    image=Column(String(80))
     user_id = Column(Integer, ForeignKey('user.id'))
     user = relationship(User)
 
@@ -49,7 +50,8 @@ class Movie(Base):
     year = Column(Integer)
     director = Column(String(80))
     language = Column(String(20))
-
+    image=Column(String(80))
+    
     genre_id = Column(Integer, ForeignKey('genre.id'))
     user_id = Column(Integer, ForeignKey('user.id'))
 
