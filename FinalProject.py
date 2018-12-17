@@ -139,7 +139,7 @@ def gconnect():
 def fbconnect():
     """This Function responsible for connection with Facebook Aouth to get user
      data."""
-    
+
     # Make sure the user state match the server state
 
     if request.args.get('state') != session['state']:
@@ -236,7 +236,7 @@ def fbdisconnect():
 @app.route('/disconnect/')
 def disconnect():
     """Logout function."""
-    
+
     if 'provider' in session:
         if session['provider'] == 'google':
             gdisconnect()

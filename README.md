@@ -17,6 +17,9 @@ run `vagrant up`
 * change directory to shared folder
 `cd /vagrant/catalog`
 
+* set up the database
+`python database_setup.py`
+
 * finally run the app
 `python FinalProject.py`
 
